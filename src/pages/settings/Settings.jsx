@@ -8,7 +8,7 @@ import './Settings.css';
 export function Settings() {
   const authService = AuthService();
   const [sessions, setSessions] = useState([]);
-  const [totp, setTotp] = useState(null); // { qrCode, secret }
+  const [totp, setTotp] = useState(null); // { secret, qrCodeUri, qrCodeImage }
   const [totpVerify, setTotpVerify] = useState('');
   const [totpModal, setTotpModal] = useState(false);
   const [toast, setToast] = useState(null);
@@ -118,8 +118,12 @@ export function Settings() {
             <p className="totp-setup-desc">
               Escanea este código QR con tu app de autenticación:
             </p>
-            {totp.qrCodeUrl && (
-              <img src={totp.qrCodeUrl} alt="QR 2FA" className="totp-qr" />
+            {totp.qrCodeImage && (
+              <img
+                src={`data:image/png;base64,${totp.qrCodeImage}`}
+                alt="QR 2FA"
+                className="totp-qr"
+              />
             )}
             {totp.secret && (
               <div className="totp-secret">
