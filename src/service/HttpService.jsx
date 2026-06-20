@@ -31,6 +31,15 @@ const createHeaders = (token, customHeaders = {}) => ({
   ...customHeaders,
 });
 
+// Endpoints públicos de auth — nunca disparan auto-refresh en 401
+const NO_REFRESH_ENDPOINTS = new Set([
+  APIs.AUTH.LOGIN,
+  APIs.AUTH.REGISTER,
+  APIs.AUTH.KDF_PARAMS,
+  APIs.AUTH.REFRESH,
+  APIs.AUTH.RECOVERY_RECOVER,
+]);
+
 // Bandera para evitar múltiples refreshes simultáneos
 let isRefreshing = false;
 let refreshQueue = [];
@@ -76,8 +85,9 @@ const request = async (method, endpoint, options = {}, retry = true) => {
 
   const response = await fetch(url, config);
 
-  // Auto-refresh en 401
-  if (response.status === 401 && retry) {
+  // Auto-refresh en 401 — solo para endpoints protegidos, nunca para auth público
+  const canRefresh = retry && !NO_REFRESH_ENDPOINTS.has(endpoint);
+  if (response.status === 401 && canRefresh) {
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         refreshQueue.push({ resolve, reject });
