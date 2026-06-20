@@ -50,13 +50,9 @@ steps:
   #      DEPLOY_HOST     → IP o dominio del servidor
   #      DEPLOY_USER     → Usuario SSH
   #      DEPLOY_SSH_KEY  → Clave privada SSH
-  #      DEPLOY_PATH     → Ruta del proyecto en el servidor
   # ---------------------------------------------------------------------------
   - name: deploy
     image: appleboy/drone-ssh
-    environment:
-      DEPLOY_PATH:
-        from_secret: DEPLOY_PATH
     settings:
       host:
         from_secret: DEPLOY_HOST
@@ -64,12 +60,11 @@ steps:
         from_secret: DEPLOY_USER
       key:
         from_secret: DEPLOY_SSH_KEY
-      envs:
-        - DEPLOY_PATH
       script:
-        - cd $DEPLOY_PATH
-        - docker compose pull ironkey-front
-        - docker compose up -d --no-deps ironkey-front
+        - cd /root/apps/iron-ui
+        - docker compose pull
+        - docker compose down --remove-orphans
+        - docker compose up -d
     when:
       branch:
         - main
