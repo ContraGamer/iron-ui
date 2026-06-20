@@ -1,0 +1,86 @@
+kind: pipeline
+type: docker
+name: ironkey-ui-ci
+
+steps:
+  # ---------------------------------------------------------------------------
+  # 1. Build
+  #    Corre en develop y main.
+  # ---------------------------------------------------------------------------
+  - name: build-and-test
+    image: node:20-alpine
+    commands:
+      - npm ci
+      - npm run build
+
+  # ---------------------------------------------------------------------------
+  # 2. Build y push de imagen Docker al registry privado
+  #    Solo se ejecuta cuando el push llega a main o develop.
+  #
+  #    Secrets requeridos en Drone:
+  #      REGISTRY_USERNAME → Usuario del registry privado
+  #      REGISTRY_PASSWORD → Contraseña del registry
+  # ---------------------------------------------------------------------------
+  - name: docker-build-and-push
+    image: plugins/docker
+    settings:
+      registry: registry.contragamer.com
+      repo: registry.contragamer.com/ironkey-ui
+      tags:
+        - latest
+        - ${DRONE_BUILD_NUMBER}
+        - 0.0.1
+      dockerfile: Dockerfile
+      username:
+        from_secret: REGISTRY_USERNAME
+      password:
+        from_secret: REGISTRY_PASSWORD
+    when:
+      branch:
+        - main
+        - develop
+      event:
+        - push
+
+  # ---------------------------------------------------------------------------
+  # 3. Deploy en VPS vía SSH
+  #    Solo se ejecuta cuando el push llega a main o develop.
+  #
+  #    Secrets requeridos en Drone:
+  #      DEPLOY_HOST     → IP o dominio del servidor
+  #      DEPLOY_USER     → Usuario SSH
+  #      DEPLOY_SSH_KEY  → Clave privada SSH
+  #      DEPLOY_PATH     → Ruta del proyecto en el servidor
+  # ---------------------------------------------------------------------------
+  - name: deploy
+    image: appleboy/drone-ssh
+    environment:
+      DEPLOY_PATH:
+        from_secret: DEPLOY_PATH
+    settings:
+      host:
+        from_secret: DEPLOY_HOST
+      username:
+        from_secret: DEPLOY_USER
+      key:
+        from_secret: DEPLOY_SSH_KEY
+      envs:
+        - DEPLOY_PATH
+      script:
+        - cd $DEPLOY_PATH
+        - docker compose pull ironkey-front
+        - docker compose up -d --no-deps ironkey-front
+    when:
+      branch:
+        - main
+        - develop
+      event:
+        - push
+
+trigger:
+  branch:
+    - main
+    - develop
+  event:
+    - push
+    - pull_request
