@@ -22,8 +22,28 @@ export function Login() {
   const [totpCode, setTotpCode] = useState('');
   const [error, setError] = useState('');
 
-  // Guardamos la encryptionKey entre el paso credentials y totp
-  const [cachedEncKey, setCachedEncKey] = useState(null);
+  // Cacheamos encryptionKey y masterPasswordHash entre el paso credentials y totp
+  const [cachedEncKey,  setCachedEncKey]  = useState(null);
+  const [cachedHash,    setCachedHash]    = useState(null);
+
+  // Lógica común: deriva clave, llama a /login, desencripta vault key
+  const doLogin = async (encryptionKey, masterPasswordHash, totpCodeValue) => {
+    const response = await authService.login({
+      email,
+      masterPasswordHash,
+      ...(totpCodeValue ? { totpCode: totpCodeValue } : {}),
+    });
+
+    const vaultKey = await unprotectVaultKey(
+      response.protectedSymmetricKey,
+      response.protectedSymmetricKeyIv,
+      encryptionKey,
+    );
+
+    login(response.accessToken, response.refreshToken);
+    setVaultKey(vaultKey);
+    navigate(URLS.VAULT);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,34 +54,23 @@ export function Login() {
       // 1. Obtener parámetros KDF del servidor
       const kdfParams = await authService.getKdfParams(email);
 
-      // 2. Derivar la master key localmente (Argon2id)
+      // 2. Derivar la master key localmente (Argon2id con params del servidor)
       const { encryptionKey, masterPasswordHash } = await deriveMasterKey(
         password,
         kdfParams.kdfSalt,
+        kdfParams,
       );
       setCachedEncKey(encryptionKey);
+      setCachedHash(masterPasswordHash);
 
-      // 3. Enviar credenciales
-      const response = await authService.login({
-        email,
-        masterPasswordHash,
-        ...(totpCode ? { totpCode } : {}),
-      });
-
-      // 4. Descifrar la vault key con la master key
-      const vaultKey = await unprotectVaultKey(response.protectedSymmetricKey, encryptionKey);
-
-      // 5. Guardar tokens y vault key en contextos
-      login(response.accessToken, response.refreshToken);
-      setVaultKey(vaultKey);
-
-      navigate(URLS.VAULT);
+      // 3. Login + descifrar vault key
+      await doLogin(encryptionKey, masterPasswordHash, null);
     } catch (err) {
       if (err?.requiresTotp || err?.code === 'TOTP_REQUIRED') {
         setStep('totp');
       } else {
         setError(err?.message || 'Credenciales incorrectas');
-        setStep(totpCode ? 'totp' : 'credentials');
+        setStep('credentials');
       }
     }
   };
@@ -72,25 +81,7 @@ export function Login() {
     setStep('loading');
 
     try {
-      const kdfParams = await authService.getKdfParams(email);
-      const { encryptionKey, masterPasswordHash } = cachedEncKey
-        ? { encryptionKey: cachedEncKey, masterPasswordHash: null }
-        : await deriveMasterKey(password, kdfParams.kdfSalt);
-
-      const { masterPasswordHash: hash } = cachedEncKey
-        ? await deriveMasterKey(password, kdfParams.kdfSalt)
-        : { masterPasswordHash: null };
-
-      const response = await authService.login({
-        email,
-        masterPasswordHash: hash,
-        totpCode,
-      });
-
-      const vaultKey = await unprotectVaultKey(response.protectedSymmetricKey, encryptionKey);
-      login(response.accessToken, response.refreshToken);
-      setVaultKey(vaultKey);
-      navigate(URLS.VAULT);
+      await doLogin(cachedEncKey, cachedHash, totpCode);
     } catch (err) {
       setError(err?.message || 'Código 2FA incorrecto');
       setStep('totp');

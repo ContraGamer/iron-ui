@@ -50,21 +50,27 @@ export function Register() {
 
     try {
       // 1. Generar salt y vault key aleatorios en el cliente
-      const kdfSalt = generateSalt(32);
+      const kdfSalt  = generateSalt(32);
       const vaultKey = await generateVaultKey();
 
       // 2. Derivar master key (Argon2id)
       const { encryptionKey, masterPasswordHash } = await deriveMasterKey(password, kdfSalt);
 
-      // 3. Cifrar la vault key con la master key
-      const protectedSymmetricKey = await protectVaultKey(vaultKey, encryptionKey);
+      // 3. Cifrar la vault key con la stretchedKey → campos separados para el DTO
+      const { protectedSymmetricKey, protectedSymmetricKeyIv } =
+        await protectVaultKey(vaultKey, encryptionKey);
 
-      // 4. Registrar en el servidor
+      // 4. Registrar en el servidor con el DTO completo
       await authService.register({
         email,
         masterPasswordHash,
+        kdfType:                 'argon2id',
+        kdfIterations:           3,
+        kdfMemory:               65536,
+        kdfParallelism:          4,
         kdfSalt,
         protectedSymmetricKey,
+        protectedSymmetricKeyIv,
       });
 
       navigate(URLS.LOGIN);
