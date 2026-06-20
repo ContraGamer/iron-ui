@@ -1,0 +1,105 @@
+.trash-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  padding: 1.5rem 1.25rem;
+}
+
+.trash-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.trash-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.trash-header p {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.trash-purge-all {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  background: rgba(224, 92, 92, 0.1);
+  border: 1px solid rgba(224, 92, 92, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.trash-purge-all:hover { background: rgba(224, 92, 92, 0.18); }
+
+.trash-loading, .trash-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem 1rem;
+  color: var(--color-muted);
+}
+
+.trash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 680px;
+}
+
+.trash-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trash-item > :first-child {
+  flex: 1;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.trash-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.trash-restore, .trash-delete {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: none;
+  white-space: nowrap;
+}
+
+.trash-restore { border: 1px solid var(--color-border); color: var(--color-accent); }
+.trash-restore:hover { border-color: var(--color-accent); }
+.trash-delete  { border: 1px solid rgba(224,92,92,0.3); color: var(--color-error); }
+.trash-delete:hover  { border-color: var(--color-error); }
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

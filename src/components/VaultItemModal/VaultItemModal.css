@@ -1,0 +1,63 @@
+.vim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.vim-password-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vim-password-row > :first-child {
+  flex: 1;
+}
+
+.vim-generate-btn {
+  background: var(--color-surface-high);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.vim-generate-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.vim-notes {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.vim-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.vim-cancel {
+  padding: 0.65rem 1.1rem;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.vim-cancel:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.vim-save {
+  width: auto;
+  padding: 0.65rem 1.25rem;
+  margin-top: 0;
+  font-size: 0.9rem;
+}

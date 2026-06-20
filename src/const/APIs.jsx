@@ -1,0 +1,37 @@
+export const APIs = {
+  AUTH: {
+    REGISTER:         'api/v1/auth/register',
+    KDF_PARAMS:       'api/v1/auth/kdf-params',
+    LOGIN:            'api/v1/auth/login',
+    REFRESH:          'api/v1/auth/refresh',
+    LOGOUT:           'api/v1/auth/logout',
+    SESSIONS:         'api/v1/auth/sessions',
+    SESSION_DELETE:   (id) => `api/v1/auth/sessions/${id}`,
+    TOTP_SETUP:       'api/v1/auth/2fa/setup',
+    TOTP_VERIFY:      'api/v1/auth/2fa/verify',
+    TOTP_DELETE:      'api/v1/auth/2fa',
+    RECOVERY_SETUP:   'api/v1/auth/recovery/setup',
+    RECOVERY_DELETE:  'api/v1/auth/recovery',
+    RECOVERY_RECOVER: 'api/v1/auth/recovery/recover',
+  },
+  VAULT: {
+    LIST:        'api/v1/vault',
+    CREATE:      'api/v1/vault',
+    GET:         (id) => `api/v1/vault/${id}`,
+    UPDATE:      (id) => `api/v1/vault/${id}`,
+    DELETE:      (id) => `api/v1/vault/${id}`,
+    TRASH:       'api/v1/vault/trash',
+    PURGE_TRASH: 'api/v1/vault/trash',
+    RESTORE:     (id) => `api/v1/vault/${id}/restore`,
+    PURGE:       (id) => `api/v1/vault/${id}/purge`,
+  },
+  FOLDERS: {
+    LIST:   'api/v1/folders',
+    CREATE: 'api/v1/folders',
+    UPDATE: (id) => `api/v1/folders/${id}`,
+    DELETE: (id) => `api/v1/folders/${id}`,
+  },
+  HEALTH: {
+    STATUS: 'api/v1/health',
+  },
+};

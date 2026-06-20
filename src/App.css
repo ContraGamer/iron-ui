@@ -1,0 +1,20 @@
+.dom-root {
+  position: relative;
+  background: var(--color-bg);
+  min-height: 100vh;
+  width: 100%;
+}
+
+.content-page {
+  position: relative;
+  min-height: 100vh;
+  transition: padding-left 0.4s ease;
+}
+
+.content-page.with-sidebar {
+  padding-left: 70px;
+}
+
+.content-page.with-sidebar.sidebar-expanded {
+  padding-left: 240px;
+}

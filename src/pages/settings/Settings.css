@@ -1,0 +1,122 @@
+.settings-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  padding: 1.5rem 1.25rem;
+}
+
+.settings-content {
+  max-width: 600px;
+}
+
+.settings-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1.75rem;
+}
+
+.settings-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.settings-section h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
+}
+
+.settings-desc {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  margin-bottom: 1rem;
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-empty {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--color-surface-high);
+  border-radius: var(--radius-md);
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.session-info p {
+  font-size: 0.88rem;
+  color: var(--color-text);
+}
+
+.session-info span {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.session-revoke {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-error);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.65rem;
+  transition: border-color 0.2s;
+}
+
+.session-revoke:hover { border-color: var(--color-error); }
+
+.settings-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  transition: opacity 0.2s;
+}
+
+.settings-btn--primary { background: var(--color-accent); color: var(--color-bg); }
+.settings-btn--danger  { background: rgba(224,92,92,0.15); color: var(--color-error); border: 1px solid rgba(224,92,92,0.3); }
+.settings-btn:hover { opacity: 0.85; }
+
+/* TOTP setup modal */
+.totp-setup { display: flex; flex-direction: column; gap: 0.75rem; }
+.totp-setup-desc { font-size: 0.88rem; color: var(--color-muted); }
+.totp-qr { width: 160px; border-radius: var(--radius-md); align-self: center; }
+.totp-secret { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.82rem; color: var(--color-muted); }
+.totp-secret code { background: var(--color-surface-high); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); color: var(--color-accent); font-size: 0.85rem; letter-spacing: 1px; word-break: break-all; }
+.totp-verify-input { text-align: center; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5rem; }
+
+.form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+.form-group label { font-size: 0.82rem; color: var(--color-muted); font-weight: 500; }
+.form-input { padding: 0.65rem 0.9rem; background: var(--color-surface-high); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-size: 0.95rem; width: 100%; }
+.form-input:focus { outline: none; border-color: var(--color-border-focus); }
+.btn-primary { padding: 0.75rem; background: var(--color-accent); color: var(--color-bg); border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 0.95rem; width: 100%; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }

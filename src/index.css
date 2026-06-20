@@ -1,0 +1,70 @@
+/* ── Tokens: Dark (default) ─────────────────────────────────────── */
+:root {
+  --color-bg:           #051F20;
+  --color-surface:      #0B2B26;
+  --color-surface-high: #163832;
+  --color-active:       #235347;
+  --color-text:         #DAF1DE;
+  --color-muted:        #8EB69B;
+  --color-accent:       #8EB69B;
+  --color-accent-hover: #DAF1DE;
+  --color-border:       #163832;
+  --color-border-focus: #8EB69B;
+  --color-error:        #e05c5c;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+/* ── Tokens: Light ───────────────────────────────────────────────── */
+[data-theme="light"] {
+  --color-bg:           #DAF1DE;
+  --color-surface:      #ffffff;
+  --color-surface-high: #f0faf2;
+  --color-active:       #8EB69B;
+  --color-text:         #051F20;
+  --color-muted:        #235347;
+  --color-accent:       #235347;
+  --color-accent-hover: #163832;
+  --color-border:       #8EB69B;
+  --color-border-focus: #235347;
+  --color-error:        #c0392b;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Utilidades base ─────────────────────────────────────────────── */
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
