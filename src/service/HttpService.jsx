@@ -37,6 +37,7 @@ const NO_REFRESH_ENDPOINTS = new Set([
   APIs.AUTH.REGISTER,
   APIs.AUTH.KDF_PARAMS,
   APIs.AUTH.REFRESH,
+  APIs.AUTH.RECOVERY_DATA,
   APIs.AUTH.RECOVERY_RECOVER,
 ]);
 
@@ -127,7 +128,7 @@ const HttpService = () => {
   const getApi    = (endpoint, query, headers) => request('GET', endpoint, { query, headers });
   const postApi   = (endpoint, body, query, headers) => request('POST', endpoint, { body, query, headers });
   const putApi    = (endpoint, body, query, headers) => request('PUT', endpoint, { body, query, headers });
-  const deleteApi = (endpoint, query, headers) => request('DELETE', endpoint, { query, headers });
+  const deleteApi = (endpoint, body, query, headers) => request('DELETE', endpoint, { body, query, headers });
 
   return { getApi, postApi, putApi, deleteApi };
 };

@@ -4,12 +4,13 @@ import { URLS } from '../const/URLs.jsx';
 import { Landing } from '../pages/landing/Landing.jsx';
 import { Login } from '../pages/login/Login.jsx';
 import { Register } from '../pages/register/Register.jsx';
+import { Recovery } from '../pages/recovery/Recovery.jsx';
 import { Vault } from '../pages/vault/Vault.jsx';
 import { Settings } from '../pages/settings/Settings.jsx';
 import { Trash } from '../pages/trash/Trash.jsx';
 import useCommonService from '../service/CommonService.jsx';
 
-const PUBLIC_ROUTES = [URLS.LANDING, URLS.LOGIN, URLS.REGISTER];
+const PUBLIC_ROUTES = [URLS.LANDING, URLS.LOGIN, URLS.REGISTER, URLS.RECOVERY];
 
 export function RouterDom() {
   const location = useLocation();
@@ -27,6 +28,7 @@ export function RouterDom() {
       <Route path={URLS.LANDING}  element={<Landing />} />
       <Route path={URLS.LOGIN}    element={<Login />} />
       <Route path={URLS.REGISTER} element={<Register />} />
+      <Route path={URLS.RECOVERY} element={<Recovery />} />
 
       {isAuth ? (
         <>

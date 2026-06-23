@@ -10,6 +10,7 @@ export const APIs = {
     TOTP_SETUP:       'api/v1/auth/2fa/setup',
     TOTP_VERIFY:      'api/v1/auth/2fa/verify',
     TOTP_DELETE:      'api/v1/auth/2fa',
+    RECOVERY_DATA:    'api/v1/auth/recovery/data',
     RECOVERY_SETUP:   'api/v1/auth/recovery/setup',
     RECOVERY_DELETE:  'api/v1/auth/recovery',
     RECOVERY_RECOVER: 'api/v1/auth/recovery/recover',

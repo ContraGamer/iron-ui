@@ -202,6 +202,10 @@ export function Login() {
           ¿No tienes cuenta?{' '}
           <Link to={URLS.REGISTER}>Crear cuenta</Link>
         </div>
+
+        <div className="auth-footer" style={{ marginTop: '0.5rem' }}>
+          <Link to={URLS.RECOVERY}>¿Olvidaste tu contraseña maestra?</Link>
+        </div>
       </div>
     </div>
   );

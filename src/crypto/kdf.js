@@ -1,19 +1,32 @@
 import { argon2id } from 'hash-wasm';
 import { fromBase64, toBase64, encode, generateIV } from './utils.js';
 
-// Parámetros Argon2id por defecto — deben coincidir con los del backend.
-// En login se usan los que devuelve el servidor via GET /auth/kdf-params.
+/**
+ * Parámetros Argon2id por defecto. Deben coincidir con los del backend.
+ * En login, el servidor devuelve los params reales via GET /auth/kdf-params.
+ * @type {{ kdfIterations: number, kdfMemory: number, kdfParallelism: number }}
+ */
 const KDF_DEFAULTS = {
   kdfIterations:   3,
   kdfMemory:       65536,  // 64 MB
   kdfParallelism:  4,
 };
 
-// Deriva la master key a partir de la contraseña maestra y el KDF salt.
-// Acepta kdfParams opcionales (del servidor) para usar en login.
-// Retorna:
-//   encryptionKey       — CryptoKey (AES-256-GCM) derivada de stretchedKey
-//   masterPasswordHash  — base64 SHA-256(masterKey || password) enviado al backend
+/**
+ * Deriva la master key del usuario a partir de su contraseña maestra.
+ *
+ * Usa Argon2id con 64 bytes de salida:
+ *   - Primeros 32 bytes → masterKey (usada para el hash de autenticación)
+ *   - Últimos 32 bytes  → stretchedKey → encryptionKey (AES-256-GCM, descifra la vaultKey)
+ *
+ * El masterPasswordHash = SHA-256(masterKey || utf8(password)) se envía al servidor para auth.
+ * La masterKey y la encryptionKey NUNCA salen del cliente.
+ *
+ * @param {string} masterPassword - Contraseña maestra del usuario.
+ * @param {string} kdfSaltBase64  - KDF salt en Base64 (devuelto por GET /auth/kdf-params).
+ * @param {object} [kdfParams]    - Parámetros Argon2id del servidor.
+ * @returns {Promise<{ encryptionKey: CryptoKey, masterPasswordHash: string }>}
+ */
 export const deriveMasterKey = async (masterPassword, kdfSaltBase64, kdfParams = {}) => {
   const { kdfIterations, kdfMemory, kdfParallelism } = { ...KDF_DEFAULTS, ...kdfParams };
   const salt = fromBase64(kdfSaltBase64);
@@ -51,12 +64,18 @@ export const deriveMasterKey = async (masterPassword, kdfSaltBase64, kdfParams =
   return { encryptionKey, masterPasswordHash };
 };
 
-// Genera una vault key aleatoria (AES-256-GCM). Se usa en el registro.
+/** Genera una vault key AES-256-GCM aleatoria. Se usa en el registro; nunca sale del cliente. */
 export const generateVaultKey = async () =>
   crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
 
-// Cifra la vault key con la encryption key y devuelve campos separados
-// para el DTO del backend: { protectedSymmetricKey, protectedSymmetricKeyIv }
+/**
+ * Cifra la vault key con la encryption key derivada de la contraseña maestra.
+ * Devuelve los campos separados que espera el DTO del backend.
+ *
+ * @param {CryptoKey} vaultKey      - Vault key a proteger.
+ * @param {CryptoKey} encryptionKey - Clave de cifrado derivada de la master password.
+ * @returns {Promise<{ protectedSymmetricKey: string, protectedSymmetricKeyIv: string }>}
+ */
 export const protectVaultKey = async (vaultKey, encryptionKey) => {
   const raw = await crypto.subtle.exportKey('raw', vaultKey);
   const iv  = generateIV();
@@ -73,8 +92,15 @@ export const protectVaultKey = async (vaultKey, encryptionKey) => {
   };
 };
 
-// Descifra el protected_symmetric_key recibido del servidor (campos separados)
-// y devuelve la vault key como CryptoKey lista para usar.
+/**
+ * Descifra el protectedSymmetricKey recibido del servidor y devuelve la vault key lista para usar.
+ * Lanza si la clave de descifrado es incorrecta (autenticación AES-GCM falla).
+ *
+ * @param {string}    protectedSymmetricKey   - Vault key cifrada, en Base64.
+ * @param {string}    protectedSymmetricKeyIv - IV usado al cifrar, en Base64.
+ * @param {CryptoKey} encryptionKey           - Clave derivada de la master password.
+ * @returns {Promise<CryptoKey>} Vault key lista para cifrar/descifrar items.
+ */
 export const unprotectVaultKey = async (protectedSymmetricKey, protectedSymmetricKeyIv, encryptionKey) => {
   const iv         = fromBase64(protectedSymmetricKeyIv);
   const ciphertext = fromBase64(protectedSymmetricKey);
@@ -89,7 +115,59 @@ export const unprotectVaultKey = async (protectedSymmetricKey, protectedSymmetri
     'raw',
     raw,
     { name: 'AES-GCM' },
-    false,
+    true,   // extractable: la vault key debe poder re-exportarse en el flujo de recovery
     ['encrypt', 'decrypt'],
   );
+};
+
+// ─── Recovery ────────────────────────────────────────────────────────────────
+
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+/**
+ * Genera un recovery code aleatorio de 32 caracteres en alfabeto base32.
+ * El código raw (sin guiones) es el que se envía al servidor y se usa en `deriveRecoveryKey`.
+ * @returns {string} 32 caracteres, solo [A-Z2-7].
+ */
+export const generateRecoveryCode = () => {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(bytes, (b) => BASE32_ALPHABET[b % 32]).join('');
+};
+
+/**
+ * Formatea un recovery code crudo en grupos de 4 separados por guiones para facilitar la lectura.
+ * Ejemplo: 'ABCDEFGH' → 'ABCD-EFGH'.
+ * @param {string} code - Recovery code sin guiones.
+ * @returns {string}
+ */
+export const formatRecoveryCode = (code) =>
+  code.match(/.{1,4}/g)?.join('-') ?? code;
+
+/**
+ * Deriva una CryptoKey AES-256-GCM a partir del recovery code del usuario.
+ * Usa los mismos parámetros KDF que la master key, con el recovery code como contraseña.
+ * Se usa para cifrar la vault key en el setup y descifrarla en el recover.
+ *
+ * IMPORTANTE: el recovery code nunca debe guardarse en localStorage ni en estado persistente.
+ *
+ * @param {string} recoveryCode    - Recovery code raw (sin guiones).
+ * @param {string} kdfSaltBase64   - KDF salt del usuario en Base64 (mismo que el de la master key).
+ * @param {object} [kdfParams]     - Parámetros Argon2id del servidor.
+ * @returns {Promise<CryptoKey>}
+ */
+export const deriveRecoveryKey = async (recoveryCode, kdfSaltBase64, kdfParams = {}) => {
+  const { kdfIterations, kdfMemory, kdfParallelism } = { ...KDF_DEFAULTS, ...kdfParams };
+  const salt = fromBase64(kdfSaltBase64);
+
+  const output = await argon2id({
+    password:    recoveryCode,
+    salt,
+    parallelism: kdfParallelism,
+    iterations:  kdfIterations,
+    memorySize:  kdfMemory,
+    hashLength:  32,
+    outputType:  'binary',
+  });
+
+  return crypto.subtle.importKey('raw', output, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 };

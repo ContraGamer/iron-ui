@@ -1,0 +1,17 @@
+.recovery-code-input {
+  font-family: monospace;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.recovery-code-hint {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.recovery-done-text {
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
