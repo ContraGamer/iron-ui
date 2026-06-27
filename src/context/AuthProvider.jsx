@@ -12,9 +12,10 @@ export const AuthProvider = ({ children }) => {
     tokenStore.onTokenUpdated((token) => setAccessToken(token));
   }, []);
 
-  const login = (access, refresh) => {
+  const login = (access, refresh, email) => {
     tokenStore.setAccess(access);
     tokenStore.setRefresh(refresh);
+    if (email) tokenStore.setEmail(email);
     setAccessToken(access);
   };
 

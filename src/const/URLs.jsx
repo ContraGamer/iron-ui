@@ -3,6 +3,7 @@ export const URLS = {
   LOGIN:    '/login',
   REGISTER: '/register',
   RECOVERY: '/recovery',
+  UNLOCK:   '/unlock',
   VAULT:    '/vault',
   SETTINGS: '/settings',
   TRASH:    '/trash',

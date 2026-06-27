@@ -1,35 +1,42 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { URLS } from '../../const/URLs.jsx';
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle.jsx';
 import { PasswordInput } from '../../components/PasswordInput/PasswordInput.jsx';
 import AuthService from '../../service/domains/AuthService.jsx';
 import useCommonService from '../../service/CommonService.jsx';
+import { tokenStore } from '../../service/tokenStore.js';
 import { deriveMasterKey, unprotectVaultKey } from '../../crypto/kdf.js';
 import 'boxicons';
 import '../../styles/auth.css';
-import './Login.css';
+import './Unlock.css';
 
-// step: 'credentials' | 'totp' | 'loading'
-export function Login() {
-  const navigate = useNavigate();
+// step: 'password' | 'totp' | 'loading'
+export function Unlock() {
+  const navigate   = useNavigate();
   const authService = AuthService();
-  const { login, setVaultKey } = useCommonService();
+  const { isAuthenticated, login, setVaultKey } = useCommonService();
 
-  const [step, setStep] = useState('credentials');
-  const [email, setEmail] = useState('');
+  const storedEmail  = tokenStore.getEmail();
+  const hasRefresh   = !!tokenStore.getRefresh();
+
+  // Si ya está autenticado, ir directo al vault
+  if (isAuthenticated()) return <Navigate to={URLS.VAULT} replace />;
+
+  // Si no hay sesión guardada, ir al login normal
+  if (!storedEmail || !hasRefresh) return <Navigate to={URLS.LOGIN} replace />;
+
+  const [step, setStep]         = useState('password');
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError]       = useState('');
 
-  // Cacheamos encryptionKey y masterPasswordHash entre el paso credentials y totp
-  const [cachedEncKey,  setCachedEncKey]  = useState(null);
-  const [cachedHash,    setCachedHash]    = useState(null);
+  const [cachedEncKey, setCachedEncKey] = useState(null);
+  const [cachedHash,   setCachedHash]   = useState(null);
 
-  // Lógica común: deriva clave, llama a /login, desencripta vault key
   const doLogin = async (encryptionKey, masterPasswordHash, totpCodeValue) => {
     const response = await authService.login({
-      email,
+      email: storedEmail,
       masterPasswordHash,
       ...(totpCodeValue ? { totpCode: totpCodeValue } : {}),
     });
@@ -40,7 +47,7 @@ export function Login() {
       encryptionKey,
     );
 
-    login(response.accessToken, response.refreshToken, email);
+    login(response.accessToken, response.refreshToken, storedEmail);
     setVaultKey(vaultKey);
     navigate(URLS.VAULT);
   };
@@ -51,10 +58,7 @@ export function Login() {
     setStep('loading');
 
     try {
-      // 1. Obtener parámetros KDF del servidor
-      const kdfParams = await authService.getKdfParams(email);
-
-      // 2. Derivar la master key localmente (Argon2id con params del servidor)
+      const kdfParams = await authService.getKdfParams(storedEmail);
       const { encryptionKey, masterPasswordHash } = await deriveMasterKey(
         password,
         kdfParams.kdfSalt,
@@ -63,14 +67,13 @@ export function Login() {
       setCachedEncKey(encryptionKey);
       setCachedHash(masterPasswordHash);
 
-      // 3. Login + descifrar vault key
       await doLogin(encryptionKey, masterPasswordHash, null);
     } catch (err) {
       if (err?.requiresTotp || err?.code === 'TOTP_REQUIRED' || err?.message === 'Se requiere código 2FA') {
         setStep('totp');
       } else {
-        setError(err?.message || 'Credenciales incorrectas');
-        setStep('credentials');
+        setError(err?.message || 'Contraseña incorrecta');
+        setStep('password');
       }
     }
   };
@@ -86,6 +89,11 @@ export function Login() {
       setError(err?.message || 'Código 2FA incorrecto');
       setStep('totp');
     }
+  };
+
+  const handleChangeAccount = () => {
+    tokenStore.clearAll();
+    navigate(URLS.LOGIN);
   };
 
   if (step === 'loading') {
@@ -141,7 +149,7 @@ export function Login() {
           </form>
 
           <div className="auth-footer">
-            <button className="link-btn" onClick={() => { setStep('credentials'); setError(''); }}>
+            <button className="link-btn" onClick={() => { setStep('password'); setError(''); }}>
               ← Volver
             </button>
           </div>
@@ -160,29 +168,19 @@ export function Login() {
             <box-icon name="lock-alt" color="var(--color-accent)" size="22px" />
           </div>
           <div>
-            <h1>IronKey</h1>
-            <p>Accede a tu bóveda</p>
+            <h1>Bienvenido de vuelta</h1>
+            <p>Ingresa tu contraseña para desbloquear</p>
           </div>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              className="form-input"
-              type="email"
-              placeholder="tu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              autoFocus
-            />
-          </div>
+        <div className="unlock-email">
+          <box-icon name="user-circle" color="var(--color-muted)" size="16px" />
+          <span>{storedEmail}</span>
+        </div>
 
+        <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="master-password">Contraseña maestra</label>
             <PasswordInput
@@ -193,18 +191,15 @@ export function Login() {
             />
           </div>
 
-          <button type="submit" className="btn-primary" disabled={!email || !password}>
-            Iniciar sesión
+          <button type="submit" className="btn-primary" disabled={!password}>
+            Desbloquear bóveda
           </button>
         </form>
 
         <div className="auth-footer">
-          ¿No tienes cuenta?{' '}
-          <Link to={URLS.REGISTER}>Crear cuenta</Link>
-        </div>
-
-        <div className="auth-footer" style={{ marginTop: '0.5rem' }}>
-          <Link to={URLS.RECOVERY}>¿Olvidaste tu contraseña maestra?</Link>
+          <button className="link-btn" onClick={handleChangeAccount}>
+            ¿No eres tú? Cambiar cuenta
+          </button>
         </div>
       </div>
     </div>
