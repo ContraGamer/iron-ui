@@ -53,9 +53,9 @@ const AuthService = () => {
   const verifyTotp = (payload) =>
     postApi(APIs.AUTH.TOTP_VERIFY, payload);
 
-  /** Desactiva el 2FA. No requiere confirmación adicional. */
-  const deleteTotp = () =>
-    deleteApi(APIs.AUTH.TOTP_DELETE);
+  /** Desactiva el 2FA. Requiere el código TOTP actual para confirmar. */
+  const deleteTotp = (payload) =>
+    deleteApi(APIs.AUTH.TOTP_DELETE, payload);
 
   // ─── Recovery ──────────────────────────────────────────────────────────────
 

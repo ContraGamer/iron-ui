@@ -30,6 +30,11 @@ export function Settings() {
   const [recoveryPayload, setRecoveryPayload] = useState(null); // { protectedKey, iv, rawCode }
   const [recoveryCodeCopied, setRecoveryCodeCopied] = useState(false);
 
+  // Disable 2FA state
+  const [disableTotpModal, setDisableTotpModal]   = useState(false);
+  const [disableTotpCode, setDisableTotpCode]     = useState('');
+  const [disableTotpSaving, setDisableTotpSaving] = useState(false);
+
   // Disable recovery state
   const [disableModal, setDisableModal]   = useState(false);
   const [disableTotp, setDisableTotp]     = useState('');
@@ -156,6 +161,20 @@ export function Settings() {
     URL.revokeObjectURL(url);
   };
 
+  const handleDisableTotp = async () => {
+    setDisableTotpSaving(true);
+    try {
+      await authService.deleteTotp({ totpCode: disableTotpCode });
+      showToast('2FA desactivado', 'success');
+      setDisableTotpModal(false);
+      setDisableTotpCode('');
+    } catch (err) {
+      showToast(err?.message || 'Código incorrecto', 'error');
+    } finally {
+      setDisableTotpSaving(false);
+    }
+  };
+
   const handleDisableRecovery = async () => {
     setDisableSaving(true);
     try {
@@ -211,10 +230,7 @@ export function Settings() {
             </button>
             <button
               className="settings-btn settings-btn--danger"
-              onClick={async () => {
-                try { await authService.deleteTotp(); showToast('2FA desactivado', 'success'); }
-                catch (err) { showToast(err?.message || 'Error', 'error'); }
-              }}
+              onClick={() => { setDisableTotpModal(true); setDisableTotpCode(''); }}
             >
               Desactivar 2FA
             </button>
@@ -377,6 +393,40 @@ export function Settings() {
             disabled={disableTotp.length !== 6 || disableSaving}
           >
             {disableSaving ? 'Desactivando…' : 'Desactivar'}
+          </button>
+        </div>
+      </Modal>
+
+      {/* Modal desactivar 2FA */}
+      <Modal
+        isOpen={disableTotpModal}
+        onClose={() => !disableTotpSaving && setDisableTotpModal(false)}
+        title="Desactivar 2FA"
+      >
+        <div className="recovery-setup">
+          <p className="recovery-setup-desc">
+            Confirma con tu código 2FA actual para desactivar la autenticación de dos factores.
+          </p>
+          <div className="form-group">
+            <label>Código 2FA</label>
+            <input
+              className="form-input totp-verify-input"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="000000"
+              value={disableTotpCode}
+              onChange={(e) => setDisableTotpCode(e.target.value.replace(/\D/g, ''))}
+              autoFocus
+            />
+          </div>
+          <button
+            className="btn-primary"
+            style={{ marginTop: '0.75rem', background: 'var(--color-error)' }}
+            onClick={handleDisableTotp}
+            disabled={disableTotpCode.length !== 6 || disableTotpSaving}
+          >
+            {disableTotpSaving ? 'Desactivando…' : 'Desactivar 2FA'}
           </button>
         </div>
       </Modal>

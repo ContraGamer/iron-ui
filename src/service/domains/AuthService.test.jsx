@@ -105,10 +105,10 @@ describe('verifyTotp', () => {
 });
 
 describe('deleteTotp', () => {
-  it('calls DELETE /auth/2fa', () => {
+  it('calls DELETE /auth/2fa with totpCode payload', () => {
     const svc = renderService();
-    svc.deleteTotp();
-    expect(mockDeleteApi).toHaveBeenCalledWith('api/v1/auth/2fa');
+    svc.deleteTotp({ totpCode: '123456' });
+    expect(mockDeleteApi).toHaveBeenCalledWith('api/v1/auth/2fa', { totpCode: '123456' });
   });
 });
 
