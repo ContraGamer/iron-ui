@@ -57,13 +57,13 @@ export function Vault() {
     }
   };
 
-  const handleSave = async (formData, id) => {
+  const handleSave = async (formData, id, folderId) => {
     const { encryptedData, iv } = await encryptVaultItem(vaultKey, formData);
     if (id) {
-      await vaultService.updateItem(id, { encryptedData, iv });
+      await vaultService.updateItem(id, { encryptedData, iv, folderId });
       showToast('Credencial actualizada', 'success');
     } else {
-      await vaultService.createItem({ encryptedData, iv });
+      await vaultService.createItem({ encryptedData, iv, folderId });
       showToast('Credencial creada', 'success');
     }
     await loadItems();

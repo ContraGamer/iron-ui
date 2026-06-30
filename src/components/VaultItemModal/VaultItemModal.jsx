@@ -28,7 +28,7 @@ export function VaultItemModal({ isOpen, onClose, onSave, initial = null }) {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      await onSave(form, initial?.id);
+      await onSave(form, initial?.id, initial?.folderId ?? null);
       onClose();
     } finally {
       setSaving(false);
