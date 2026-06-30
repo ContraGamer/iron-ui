@@ -12,7 +12,7 @@ const getFavicon = (url) => {
   }
 };
 
-export function VaultCard({ item, onEdit }) {
+export function VaultCard({ item, onEdit, onDelete }) {
   const { name, url, username, password } = item.decrypted;
   const [faviconErr, setFaviconErr] = useState(false);
   const favicon = url && !faviconErr ? getFavicon(url) : null;
@@ -57,6 +57,15 @@ export function VaultCard({ item, onEdit }) {
         >
           <box-icon name="edit" color="var(--color-muted)" size="16px" />
         </button>
+        {onDelete && (
+          <button
+            className="vault-card-delete"
+            onClick={() => onDelete(item.id)}
+            title="Mover a papelera"
+          >
+            <box-icon name="trash" color="var(--color-muted)" size="16px" />
+          </button>
+        )}
       </div>
     </div>
   );

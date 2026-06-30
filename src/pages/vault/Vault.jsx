@@ -70,6 +70,16 @@ export function Vault() {
     await loadItems();
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await vaultService.deleteItem(id);
+      showToast('Credencial movida a la papelera', 'success');
+      await loadItems();
+    } catch (err) {
+      showToast(err?.message || 'Error al eliminar', 'error');
+    }
+  };
+
   const handleEdit = (item) => {
     setEditItem(item);
     setModalOpen(true);
@@ -122,7 +132,7 @@ export function Vault() {
         ) : (
           <div className="vault-list">
             {filtered.map((item) => (
-              <VaultCard key={item.id} item={item} onEdit={handleEdit} />
+              <VaultCard key={item.id} item={item} onEdit={handleEdit} onDelete={handleDelete} />
             ))}
           </div>
         )}
