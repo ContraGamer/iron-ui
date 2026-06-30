@@ -66,7 +66,7 @@ export function Login() {
       // 3. Login + descifrar vault key
       await doLogin(encryptionKey, masterPasswordHash, null);
     } catch (err) {
-      if (err?.requiresTotp || err?.code === 'TOTP_REQUIRED' || err?.message === 'Se requiere código 2FA') {
+      if (err?.code === 'TOTP_REQUIRED') {
         setStep('totp');
       } else {
         setError(err?.message || 'Credenciales incorrectas');
