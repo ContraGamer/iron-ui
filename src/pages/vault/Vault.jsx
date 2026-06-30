@@ -7,6 +7,7 @@ import { VaultItemModal } from '../../components/VaultItemModal/VaultItemModal.j
 import { Toast } from '../../components/Toast/Toast.jsx';
 import VaultService from '../../service/domains/VaultService.jsx';
 import useCommonService from '../../service/CommonService.jsx';
+import { tokenStore } from '../../service/tokenStore.js';
 import { encryptVaultItem, decryptVaultItem } from '../../crypto/vault.js';
 import 'boxicons';
 import './Vault.css';
@@ -26,7 +27,7 @@ export function Vault() {
   // Si no hay vault key en memoria, redirigir a login para re-derivarla
   useEffect(() => {
     if (!isAuthenticated()) { navigate(URLS.LOGIN); return; }
-    if (!vaultKey) { navigate(URLS.LOGIN); return; }
+    if (!vaultKey) { navigate(tokenStore.getRefresh() ? URLS.UNLOCK : URLS.LOGIN); return; }
     loadItems();
   }, []);
 
