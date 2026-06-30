@@ -28,7 +28,7 @@ export function Trash() {
       const decrypted = await Promise.all(
         (raw || []).map(async (item) => {
           try {
-            const data = await decryptVaultItem(vaultKey, item.encryptedData);
+            const data = await decryptVaultItem(vaultKey, item.encryptedData, item.iv);
             return { ...item, decrypted: data };
           } catch {
             return { ...item, decrypted: { name: '⚠ Error al descifrar', url: '', username: '', password: '' } };

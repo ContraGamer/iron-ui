@@ -42,7 +42,7 @@ export function Vault() {
       const decrypted = await Promise.all(
         (raw || []).map(async (item) => {
           try {
-            const data = await decryptVaultItem(vaultKey, item.encryptedData);
+            const data = await decryptVaultItem(vaultKey, item.encryptedData, item.iv);
             return { ...item, decrypted: data };
           } catch {
             return { ...item, decrypted: { name: '⚠ Error al descifrar', url: '', username: '', password: '' } };
@@ -58,12 +58,12 @@ export function Vault() {
   };
 
   const handleSave = async (formData, id) => {
-    const encryptedData = await encryptVaultItem(vaultKey, formData);
+    const { encryptedData, iv } = await encryptVaultItem(vaultKey, formData);
     if (id) {
-      await vaultService.updateItem(id, { encryptedData });
+      await vaultService.updateItem(id, { encryptedData, iv });
       showToast('Credencial actualizada', 'success');
     } else {
-      await vaultService.createItem({ encryptedData });
+      await vaultService.createItem({ encryptedData, iv });
       showToast('Credencial creada', 'success');
     }
     await loadItems();
