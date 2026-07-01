@@ -262,6 +262,13 @@ export function Settings() {
 
   const handleExportCsv = async () => {
     if (!vaultKey) { showToast('Sesión expirada — vuelve a iniciar sesión', 'error'); return; }
+    const confirmed = window.confirm(
+      '⚠️ Advertencia de seguridad\n\n' +
+      'El archivo CSV contendrá tus contraseñas en TEXTO PLANO.\n' +
+      'Cualquier persona con acceso al archivo podrá leerlas.\n\n' +
+      '¿Deseas continuar?'
+    );
+    if (!confirmed) return;
     try {
       const raw = await vaultService.listItems();
       const rows = await Promise.all(raw.map(async (item) => {
