@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeProvider.jsx';
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { VaultKeyProvider } from './context/VaultKeyProvider.jsx';
 import { SidebarProvider } from './context/SidebarProvider.jsx';
+import { FolderProvider } from './context/FolderProvider.jsx';
 import './index.css';
 import App from './App.jsx';
 
@@ -14,9 +15,11 @@ createRoot(document.getElementById('root')).render(
       <ThemeProvider>
         <AuthProvider>
           <VaultKeyProvider>
-            <SidebarProvider>
-              <App />
-            </SidebarProvider>
+            <FolderProvider>
+              <SidebarProvider>
+                <App />
+              </SidebarProvider>
+            </FolderProvider>
           </VaultKeyProvider>
         </AuthProvider>
       </ThemeProvider>

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Modal } from '../Modal/Modal.jsx';
 import { PasswordInput } from '../PasswordInput/PasswordInput.jsx';
 import { CopyButton } from '../CopyButton/CopyButton.jsx';
+import { useFolders } from '../../context/FolderProvider.jsx';
 import 'boxicons';
 import './VaultItemModal.css';
 
-const EMPTY = { name: '', url: '', username: '', password: '', notes: '' };
+const EMPTY = { name: '', url: '', username: '', password: '', notes: '', folderId: null };
 
 const generatePassword = (length = 20) => {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=';
@@ -17,9 +18,13 @@ const generatePassword = (length = 20) => {
 export function VaultItemModal({ isOpen, onClose, onSave, initial = null }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const { folders } = useFolders();
 
   useEffect(() => {
-    setForm(initial ? { ...EMPTY, ...initial.decrypted } : EMPTY);
+    setForm(initial
+      ? { ...EMPTY, ...initial.decrypted, folderId: initial.folderId ?? null }
+      : EMPTY
+    );
   }, [initial, isOpen]);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -28,7 +33,7 @@ export function VaultItemModal({ isOpen, onClose, onSave, initial = null }) {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      await onSave(form, initial?.id, initial?.folderId ?? null);
+      await onSave(form, initial?.id);
       onClose();
     } finally {
       setSaving(false);
@@ -46,6 +51,22 @@ export function VaultItemModal({ isOpen, onClose, onSave, initial = null }) {
           <label>Nombre *</label>
           <input className="form-input" placeholder="GitHub, Google…" value={form.name} onChange={set('name')} autoFocus />
         </div>
+
+        {folders.length > 0 && (
+          <div className="form-group">
+            <label>Carpeta</label>
+            <select
+              className="form-input"
+              value={form.folderId ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, folderId: e.target.value || null }))}
+            >
+              <option value="">Sin carpeta</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>{folder.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="form-group">
           <label>URL</label>

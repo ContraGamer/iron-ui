@@ -8,6 +8,7 @@ import { Toast } from '../../components/Toast/Toast.jsx';
 import VaultService from '../../service/domains/VaultService.jsx';
 import useCommonService from '../../service/CommonService.jsx';
 import { tokenStore } from '../../service/tokenStore.js';
+import { useFolders } from '../../context/FolderProvider.jsx';
 import { encryptVaultItem, decryptVaultItem } from '../../crypto/vault.js';
 import 'boxicons';
 import './Vault.css';
@@ -15,6 +16,7 @@ import './Vault.css';
 export function Vault() {
   const navigate = useNavigate();
   const { vaultKey, isAuthenticated } = useCommonService();
+  const { folders, selectedFolderId, setSelectedFolderId } = useFolders();
   const vaultService = VaultService();
 
   const [items, setItems] = useState([]);
@@ -58,13 +60,14 @@ export function Vault() {
     }
   };
 
-  const handleSave = async (formData, id, folderId) => {
-    const { encryptedData, iv } = await encryptVaultItem(vaultKey, formData);
+  const handleSave = async (formData, id) => {
+    const { folderId, ...encryptPayload } = formData;
+    const { encryptedData, iv } = await encryptVaultItem(vaultKey, encryptPayload);
     if (id) {
-      await vaultService.updateItem(id, { encryptedData, iv, folderId });
+      await vaultService.updateItem(id, { encryptedData, iv, folderId: folderId ?? null });
       showToast('Credencial actualizada', 'success');
     } else {
-      await vaultService.createItem({ encryptedData, iv, folderId });
+      await vaultService.createItem({ encryptedData, iv, folderId: folderId ?? null });
       showToast('Credencial creada', 'success');
     }
     await loadItems();
@@ -91,21 +94,33 @@ export function Vault() {
   };
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return items;
+    let result = selectedFolderId
+      ? items.filter((item) => item.folderId === selectedFolderId)
+      : items;
+    if (!search.trim()) return result;
     const q = search.toLowerCase();
-    return items.filter(({ decrypted: d }) =>
+    return result.filter(({ decrypted: d }) =>
       d.name?.toLowerCase().includes(q) ||
       d.url?.toLowerCase().includes(q) ||
       d.username?.toLowerCase().includes(q),
     );
-  }, [items, search]);
+  }, [items, search, selectedFolderId]);
 
   return (
     <div className="vault-page">
       {/* Header */}
       <header className="vault-header">
-        <div className="vault-search-wrap">
-          <SearchBar value={search} onChange={setSearch} />
+        <div className="vault-header-left">
+          {selectedFolderId && (
+            <button className="vault-folder-badge" onClick={() => setSelectedFolderId(null)} title="Limpiar filtro">
+              <box-icon name="folder" color="var(--color-accent)" size="14px" />
+              <span>{folders.find((f) => f.id === selectedFolderId)?.name}</span>
+              <box-icon name="x" color="var(--color-muted)" size="14px" />
+            </button>
+          )}
+          <div className="vault-search-wrap">
+            <SearchBar value={search} onChange={setSearch} />
+          </div>
         </div>
         <button className="vault-add-btn" onClick={handleNew}>
           <box-icon name="plus" color="var(--color-bg)" size="18px" />

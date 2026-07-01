@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { URLS } from '../../const/URLs.jsx';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle.jsx';
 import useCommonService from '../../service/CommonService.jsx';
 import AuthService from '../../service/domains/AuthService.jsx';
 import { useSidebar } from '../../context/SidebarProvider.jsx';
+import { useFolders } from '../../context/FolderProvider.jsx';
 import 'boxicons';
 import './Sidebar.css';
 
@@ -16,15 +17,43 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const [expanded, setExpanded] = useState(false);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const newFolderInputRef = useRef(null);
   const navigate = useNavigate();
   const { logout } = useCommonService();
   const authService = AuthService();
   const { setSidebarExpanded } = useSidebar();
+  const { folders, selectedFolderId, setSelectedFolderId, createFolder, removeFolder } = useFolders();
 
   const toggle = () => {
     const next = !expanded;
     setExpanded(next);
     setSidebarExpanded(next);
+    if (!next) { setCreatingFolder(false); setNewFolderName(''); }
+  };
+
+  const handleStartCreate = () => {
+    setCreatingFolder(true);
+    setNewFolderName('');
+    setTimeout(() => newFolderInputRef.current?.focus(), 50);
+  };
+
+  const handleConfirmCreate = async () => {
+    const name = newFolderName.trim();
+    if (name) await createFolder(name);
+    setCreatingFolder(false);
+    setNewFolderName('');
+  };
+
+  const handleFolderKeyDown = (e) => {
+    if (e.key === 'Enter') handleConfirmCreate();
+    if (e.key === 'Escape') { setCreatingFolder(false); setNewFolderName(''); }
+  };
+
+  const handleFolderClick = (id) => {
+    setSelectedFolderId(selectedFolderId === id ? null : id);
+    navigate(URLS.VAULT);
   };
 
   const handleLogout = async () => {
@@ -71,6 +100,55 @@ export function Sidebar() {
             {!expanded && <span className="sidebar-tooltip">{label}</span>}
           </NavLink>
         ))}
+
+        {/* Carpetas — solo cuando está expandido */}
+        {expanded && (
+          <div className="sidebar-folders">
+            <div className="sidebar-folders-header">
+              <span className="sidebar-folders-title">Carpetas</span>
+              <button
+                className="sidebar-folders-add"
+                onClick={handleStartCreate}
+                title="Nueva carpeta"
+              >
+                <box-icon name="plus" color="var(--color-muted)" size="16px" />
+              </button>
+            </div>
+
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                className={`sidebar-folder-item ${selectedFolderId === folder.id ? 'sidebar-folder-item--active' : ''}`}
+                onClick={() => handleFolderClick(folder.id)}
+              >
+                <box-icon name="folder" color="currentColor" size="16px" />
+                <span className="sidebar-folder-name">{folder.name}</span>
+                <span
+                  className="sidebar-folder-delete"
+                  role="button"
+                  onClick={(e) => { e.stopPropagation(); removeFolder(folder.id); }}
+                  title="Eliminar carpeta"
+                >
+                  <box-icon name="trash" color="var(--color-muted)" size="14px" />
+                </span>
+              </button>
+            ))}
+
+            {creatingFolder && (
+              <input
+                ref={newFolderInputRef}
+                className="sidebar-folder-input"
+                type="text"
+                placeholder="Nombre de carpeta"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={handleFolderKeyDown}
+                onBlur={handleConfirmCreate}
+                maxLength={64}
+              />
+            )}
+          </div>
+        )}
       </nav>
 
       {/* Footer */}
