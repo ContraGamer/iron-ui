@@ -80,13 +80,18 @@
 
 .vault-card-delete {
   background: none;
-  border: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
-  padding: 0;
-  transition: opacity 0.2s;
+  padding: 0.35rem;
+  transition: border-color 0.2s;
 }
 
 .vault-card-delete:hover {
-  opacity: 0.7;
+  border-color: var(--color-error);
+}
+
+.vault-card-delete:hover box-icon {
+  color: var(--color-error);
 }
