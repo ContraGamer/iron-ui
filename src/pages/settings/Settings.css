@@ -23,6 +23,36 @@
   margin-bottom: 1rem;
 }
 
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.settings-section-header h2 {
+  margin-bottom: 0;
+}
+
+.settings-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.settings-badge--active {
+  background: rgba(142, 182, 155, 0.18);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.settings-badge--inactive {
+  background: transparent;
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+
 .settings-section h2 {
   font-size: 0.95rem;
   font-weight: 600;

@@ -45,6 +45,12 @@ export const FolderProvider = ({ children }) => {
     return newFolder;
   };
 
+  const renameFolder = async (id, name) => {
+    const { encryptedData, iv } = await encryptVaultItem(vaultKey, { name });
+    await folderService.updateFolder(id, { encryptedName: encryptedData, iv });
+    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
+  };
+
   const removeFolder = async (id) => {
     await folderService.deleteFolder(id);
     setFolders((prev) => prev.filter((f) => f.id !== id));
@@ -52,7 +58,7 @@ export const FolderProvider = ({ children }) => {
   };
 
   return (
-    <FolderContext.Provider value={{ folders, selectedFolderId, setSelectedFolderId, createFolder, removeFolder }}>
+    <FolderContext.Provider value={{ folders, selectedFolderId, setSelectedFolderId, createFolder, renameFolder, removeFolder }}>
       {children}
     </FolderContext.Provider>
   );

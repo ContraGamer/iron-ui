@@ -49,6 +49,7 @@ export function Unlock() {
 
     login(response.accessToken, response.refreshToken, storedEmail);
     setVaultKey(vaultKey, response.vaultTimeoutMinutes);
+    tokenStore.setRecoveryEnabled(response.recoveryEnabled ?? false);
     navigate(URLS.VAULT);
   };
 

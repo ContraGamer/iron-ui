@@ -201,16 +201,29 @@
   text-overflow: ellipsis;
 }
 
-.sidebar-folder-delete {
+.sidebar-folder-actions {
   display: flex;
   align-items: center;
+  gap: 0.15rem;
   opacity: 0;
   transition: opacity 0.15s;
   flex-shrink: 0;
 }
 
-.sidebar-folder-item:hover .sidebar-folder-delete {
+.sidebar-folder-item:hover .sidebar-folder-actions {
   opacity: 1;
+}
+
+.sidebar-folder-action {
+  display: flex;
+  align-items: center;
+  padding: 0.1rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.sidebar-folder-action:hover {
+  background: var(--color-border);
 }
 
 .sidebar-folder-input {

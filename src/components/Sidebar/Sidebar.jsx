@@ -20,11 +20,14 @@ export function Sidebar() {
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const newFolderInputRef = useRef(null);
+  const [editingFolderId, setEditingFolderId] = useState(null);
+  const [editingName, setEditingName] = useState('');
+  const editingInputRef = useRef(null);
   const navigate = useNavigate();
   const { logout } = useCommonService();
   const authService = AuthService();
   const { setSidebarExpanded } = useSidebar();
-  const { folders, selectedFolderId, setSelectedFolderId, createFolder, removeFolder } = useFolders();
+  const { folders, selectedFolderId, setSelectedFolderId, createFolder, renameFolder, removeFolder } = useFolders();
 
   const toggle = () => {
     const next = !expanded;
@@ -54,6 +57,26 @@ export function Sidebar() {
   const handleFolderClick = (id) => {
     setSelectedFolderId(selectedFolderId === id ? null : id);
     navigate(URLS.VAULT);
+  };
+
+  const handleStartRename = (folder) => {
+    setEditingFolderId(folder.id);
+    setEditingName(folder.name);
+    setTimeout(() => editingInputRef.current?.focus(), 50);
+  };
+
+  const handleConfirmRename = async () => {
+    const name = editingName.trim();
+    if (name && name !== folders.find((f) => f.id === editingFolderId)?.name) {
+      await renameFolder(editingFolderId, name);
+    }
+    setEditingFolderId(null);
+    setEditingName('');
+  };
+
+  const handleRenameKeyDown = (e) => {
+    if (e.key === 'Enter') handleConfirmRename();
+    if (e.key === 'Escape') { setEditingFolderId(null); setEditingName(''); }
   };
 
   const handleLogout = async () => {
@@ -115,24 +138,48 @@ export function Sidebar() {
               </button>
             </div>
 
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                className={`sidebar-folder-item ${selectedFolderId === folder.id ? 'sidebar-folder-item--active' : ''}`}
-                onClick={() => handleFolderClick(folder.id)}
-              >
-                <box-icon name="folder" color="currentColor" size="16px" />
-                <span className="sidebar-folder-name">{folder.name}</span>
-                <span
-                  className="sidebar-folder-delete"
-                  role="button"
-                  onClick={(e) => { e.stopPropagation(); removeFolder(folder.id); }}
-                  title="Eliminar carpeta"
+            {folders.map((folder) =>
+              editingFolderId === folder.id ? (
+                <input
+                  key={folder.id}
+                  ref={editingInputRef}
+                  className="sidebar-folder-input"
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyDown={handleRenameKeyDown}
+                  onBlur={handleConfirmRename}
+                  maxLength={64}
+                />
+              ) : (
+                <button
+                  key={folder.id}
+                  className={`sidebar-folder-item ${selectedFolderId === folder.id ? 'sidebar-folder-item--active' : ''}`}
+                  onClick={() => handleFolderClick(folder.id)}
                 >
-                  <box-icon name="trash" color="var(--color-muted)" size="14px" />
-                </span>
-              </button>
-            ))}
+                  <box-icon name="folder" color="currentColor" size="16px" />
+                  <span className="sidebar-folder-name">{folder.name}</span>
+                  <span className="sidebar-folder-actions">
+                    <span
+                      role="button"
+                      className="sidebar-folder-action"
+                      onClick={(e) => { e.stopPropagation(); handleStartRename(folder); }}
+                      title="Renombrar carpeta"
+                    >
+                      <box-icon name="pencil" color="var(--color-muted)" size="13px" />
+                    </span>
+                    <span
+                      role="button"
+                      className="sidebar-folder-action"
+                      onClick={(e) => { e.stopPropagation(); removeFolder(folder.id); }}
+                      title="Eliminar carpeta"
+                    >
+                      <box-icon name="trash" color="var(--color-muted)" size="13px" />
+                    </span>
+                  </span>
+                </button>
+              )
+            )}
 
             {creatingFolder && (
               <input

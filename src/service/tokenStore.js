@@ -1,7 +1,8 @@
 // Almacén de tokens a nivel de módulo para que HttpService pueda leerlos
 // sin necesitar hooks de React. AuthProvider mantiene este store sincronizado.
-const REFRESH_KEY = btoa('ironkey-refresh');
-const EMAIL_KEY   = btoa('ironkey-email');
+const REFRESH_KEY   = btoa('ironkey-refresh');
+const EMAIL_KEY     = btoa('ironkey-email');
+const RECOVERY_KEY  = btoa('ironkey-recovery-enabled');
 
 let _accessToken = null;
 let _onTokenUpdated = null;
@@ -34,6 +35,13 @@ export const tokenStore = {
     else localStorage.removeItem(EMAIL_KEY);
   },
 
+  // Estado de recovery — sessionStorage: persiste en la pestaña, se borra al cerrarla
+  getRecoveryEnabled: () => {
+    const v = sessionStorage.getItem(RECOVERY_KEY);
+    return v === null ? null : v === 'true';
+  },
+  setRecoveryEnabled: (v) => sessionStorage.setItem(RECOVERY_KEY, String(v)),
+
   // AuthProvider registra este callback para mantener el estado React sincronizado
   onTokenUpdated: (cb) => { _onTokenUpdated = cb; },
 
@@ -46,6 +54,7 @@ export const tokenStore = {
     _accessToken = null;
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(EMAIL_KEY);
+    sessionStorage.removeItem(RECOVERY_KEY);
     _onTokenUpdated?.(null);
   },
 };

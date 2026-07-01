@@ -5,6 +5,7 @@ import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle.jsx';
 import { PasswordInput } from '../../components/PasswordInput/PasswordInput.jsx';
 import AuthService from '../../service/domains/AuthService.jsx';
 import useCommonService from '../../service/CommonService.jsx';
+import { tokenStore } from '../../service/tokenStore.js';
 import { deriveMasterKey, unprotectVaultKey } from '../../crypto/kdf.js';
 import 'boxicons';
 import '../../styles/auth.css';
@@ -42,6 +43,7 @@ export function Login() {
 
     login(response.accessToken, response.refreshToken, email);
     setVaultKey(vaultKey, response.vaultTimeoutMinutes);
+    tokenStore.setRecoveryEnabled(response.recoveryEnabled ?? false);
     navigate(URLS.VAULT);
   };
 

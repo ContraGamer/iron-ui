@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AuthService from '../../service/domains/AuthService.jsx';
 import useCommonService from '../../service/CommonService.jsx';
+import { tokenStore } from '../../service/tokenStore.js';
 import { Toast } from '../../components/Toast/Toast.jsx';
 import { Modal } from '../../components/Modal/Modal.jsx';
 import {
@@ -34,6 +35,9 @@ export function Settings() {
   const [disableTotpModal, setDisableTotpModal]   = useState(false);
   const [disableTotpCode, setDisableTotpCode]     = useState('');
   const [disableTotpSaving, setDisableTotpSaving] = useState(false);
+
+  // Estado de recovery leído del tokenStore (seteado al hacer login)
+  const [recoveryActive, setRecoveryActive] = useState(tokenStore.getRecoveryEnabled() ?? false);
 
   // Disable recovery state
   const [disableModal, setDisableModal]   = useState(false);
@@ -127,6 +131,8 @@ export function Settings() {
         recoveryProtectedKeyIv: recoveryPayload.recoveryProtectedKeyIv,
       });
       showToast('Recuperación configurada correctamente', 'success');
+      tokenStore.setRecoveryEnabled(true);
+      setRecoveryActive(true);
       setRecoveryStep(null);
     } catch (err) {
       showToast(err?.message || 'Error al activar la recuperación', 'error');
@@ -180,6 +186,8 @@ export function Settings() {
     try {
       await authService.deleteRecovery({ totpCode: disableTotp });
       showToast('Recuperación desactivada', 'success');
+      tokenStore.setRecoveryEnabled(false);
+      setRecoveryActive(false);
       setDisableModal(false);
       setDisableTotp('');
     } catch (err) {
@@ -239,26 +247,36 @@ export function Settings() {
 
         {/* Recuperación de cuenta */}
         <section className="settings-section">
-          <h2>Recuperación de cuenta</h2>
+          <div className="settings-section-header">
+            <h2>Recuperación de cuenta</h2>
+            {recoveryActive
+              ? <span className="settings-badge settings-badge--active">Activo</span>
+              : <span className="settings-badge settings-badge--inactive">No configurado</span>
+            }
+          </div>
           <p className="settings-desc">
             Genera un código de recuperación para restaurar el acceso si olvidas tu contraseña maestra.
             Requiere 2FA activo. Guarda el código en un lugar seguro — no se puede recuperar después.
           </p>
           <div className="settings-actions">
-            <button
-              className="settings-btn settings-btn--primary"
-              onClick={startRecoverySetup}
-              disabled={recoveryStep === 'generating'}
-            >
-              <box-icon name="key" color="var(--color-bg)" size="16px" />
-              {recoveryStep === 'generating' ? 'Generando…' : 'Configurar recuperación'}
-            </button>
-            <button
-              className="settings-btn settings-btn--danger"
-              onClick={() => { setDisableModal(true); setDisableTotp(''); }}
-            >
-              Desactivar recuperación
-            </button>
+            {!recoveryActive && (
+              <button
+                className="settings-btn settings-btn--primary"
+                onClick={startRecoverySetup}
+                disabled={recoveryStep === 'generating'}
+              >
+                <box-icon name="key" color="var(--color-bg)" size="16px" />
+                {recoveryStep === 'generating' ? 'Generando…' : 'Configurar recuperación'}
+              </button>
+            )}
+            {recoveryActive && (
+              <button
+                className="settings-btn settings-btn--danger"
+                onClick={() => { setDisableModal(true); setDisableTotp(''); }}
+              >
+                Desactivar recuperación
+              </button>
+            )}
           </div>
         </section>
       </div>
