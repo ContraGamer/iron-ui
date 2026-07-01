@@ -48,7 +48,7 @@ export function Unlock() {
     );
 
     login(response.accessToken, response.refreshToken, storedEmail);
-    setVaultKey(vaultKey);
+    setVaultKey(vaultKey, response.vaultTimeoutMinutes);
     navigate(URLS.VAULT);
   };
 
