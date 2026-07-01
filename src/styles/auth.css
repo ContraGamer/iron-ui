@@ -160,3 +160,13 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.field-error {
+  font-size: 0.8rem;
+  color: var(--color-error);
+  margin-top: 0.2rem;
+}
+
+.form-input--error {
+  border-color: var(--color-error) !important;
+}

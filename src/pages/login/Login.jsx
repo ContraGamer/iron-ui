@@ -22,6 +22,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Cacheamos encryptionKey y masterPasswordHash entre el paso credentials y totp
   const [cachedEncKey,  setCachedEncKey]  = useState(null);
@@ -50,6 +51,7 @@ export function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     setStep('loading');
 
     try {
@@ -70,6 +72,9 @@ export function Login() {
     } catch (err) {
       if (err?.code === 'TOTP_REQUIRED') {
         setStep('totp');
+      } else if (err?.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+        setStep('credentials');
       } else {
         setError(err?.message || 'Credenciales incorrectas');
         setStep('credentials');
@@ -174,15 +179,16 @@ export function Login() {
             <label htmlFor="email">Email</label>
             <input
               id="email"
-              className="form-input"
+              className={`form-input${fieldErrors.email ? ' form-input--error' : ''}`}
               type="email"
               placeholder="tu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setFieldErrors((f) => ({ ...f, email: undefined })); }}
               required
               autoComplete="email"
               autoFocus
             />
+            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
           </div>
 
           <div className="form-group">

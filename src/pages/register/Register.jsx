@@ -37,6 +37,7 @@ export function Register() {
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const strength = getStrength(password);
   const passwordsMatch = password && confirm && password === confirm;
@@ -46,6 +47,7 @@ export function Register() {
     e.preventDefault();
     if (!canSubmit) return;
     setError('');
+    setFieldErrors({});
     setLoading(true);
 
     try {
@@ -75,7 +77,11 @@ export function Register() {
 
       navigate(URLS.LOGIN);
     } catch (err) {
-      setError(err?.message || 'Error al crear la cuenta');
+      if (err?.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      } else {
+        setError(err?.message || 'Error al crear la cuenta');
+      }
     } finally {
       setLoading(false);
     }
@@ -117,15 +123,16 @@ export function Register() {
             <label htmlFor="reg-email">Email</label>
             <input
               id="reg-email"
-              className="form-input"
+              className={`form-input${fieldErrors.email ? ' form-input--error' : ''}`}
               type="email"
               placeholder="tu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setFieldErrors((f) => ({ ...f, email: undefined })); }}
               required
               autoComplete="email"
               autoFocus
             />
+            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
           </div>
 
           <div className="form-group">
