@@ -62,6 +62,62 @@
   font-size: 0.9rem;
 }
 
+/* Tags */
+.vim-tags-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--color-surface-high);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-height: 38px;
+  cursor: text;
+}
+
+.vim-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--color-active);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.vim-tag-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.vim-tag-remove:hover {
+  color: var(--color-error);
+}
+
+.vim-tag-field {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  font-size: 0.87rem;
+  min-width: 80px;
+  flex: 1;
+}
+
+.vim-tag-field::placeholder {
+  color: var(--color-muted);
+}
+
 /* History */
 .vim-history {
   border: 1px solid var(--color-border);

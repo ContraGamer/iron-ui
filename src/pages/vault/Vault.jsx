@@ -22,6 +22,7 @@ export function Vault() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedTag, setSelectedTag] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [toast, setToast] = useState(null);
@@ -97,6 +98,7 @@ export function Vault() {
     let result = selectedFolderId
       ? items.filter((item) => item.folderId === selectedFolderId)
       : items;
+    if (selectedTag) result = result.filter((item) => item.decrypted?.tags?.includes(selectedTag));
     if (!search.trim()) return result;
     const q = search.toLowerCase();
     return result.filter(({ decrypted: d }) =>
@@ -104,7 +106,7 @@ export function Vault() {
       d.url?.toLowerCase().includes(q) ||
       d.username?.toLowerCase().includes(q),
     );
-  }, [items, search, selectedFolderId]);
+  }, [items, search, selectedFolderId, selectedTag]);
 
   return (
     <div className="vault-page">
@@ -115,6 +117,13 @@ export function Vault() {
             <button className="vault-folder-badge" onClick={() => setSelectedFolderId(null)} title="Limpiar filtro">
               <box-icon name="folder" color="var(--color-accent)" size="14px" />
               <span>{folders.find((f) => f.id === selectedFolderId)?.name}</span>
+              <box-icon name="x" color="var(--color-muted)" size="14px" />
+            </button>
+          )}
+          {selectedTag && (
+            <button className="vault-folder-badge" onClick={() => setSelectedTag(null)} title="Limpiar filtro de tag">
+              <box-icon name="purchase-tag" color="var(--color-accent)" size="14px" />
+              <span>{selectedTag}</span>
               <box-icon name="x" color="var(--color-muted)" size="14px" />
             </button>
           )}
@@ -147,7 +156,7 @@ export function Vault() {
         ) : (
           <div className="vault-list">
             {filtered.map((item) => (
-              <VaultCard key={item.id} item={item} onEdit={handleEdit} onDelete={handleDelete} />
+              <VaultCard key={item.id} item={item} onEdit={handleEdit} onDelete={handleDelete} onTagClick={setSelectedTag} />
             ))}
           </div>
         )}

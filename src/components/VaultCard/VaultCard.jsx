@@ -12,8 +12,8 @@ const getFavicon = (url) => {
   }
 };
 
-export function VaultCard({ item, onEdit, onDelete }) {
-  const { name, url, username, password } = item.decrypted;
+export function VaultCard({ item, onEdit, onDelete, onTagClick }) {
+  const { name, url, username, password, tags } = item.decrypted;
   const [faviconErr, setFaviconErr] = useState(false);
   const favicon = url && !faviconErr ? getFavicon(url) : null;
 
@@ -44,6 +44,20 @@ export function VaultCard({ item, onEdit, onDelete }) {
           <p className="vault-card-url">
             {new URL(url.startsWith('http') ? url : `https://${url}`).hostname}
           </p>
+        )}
+        {tags?.length > 0 && (
+          <div className="vault-card-tags">
+            {tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className="vault-card-tag"
+                onClick={(e) => { e.stopPropagation(); onTagClick?.(tag); }}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 

@@ -9,7 +9,7 @@ import { decryptVaultItem } from '../../crypto/vault.js';
 import 'boxicons';
 import './VaultItemModal.css';
 
-const EMPTY = { name: '', url: '', username: '', password: '', notes: '', folderId: null };
+const EMPTY = { name: '', url: '', username: '', password: '', notes: '', tags: [], folderId: null };
 
 const generatePassword = (length = 20) => {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=';
@@ -25,20 +25,39 @@ export function VaultItemModal({ isOpen, onClose, onSave, initial = null }) {
   const { vaultKey } = useVaultKey();
   const vaultService = VaultService();
 
+  const [tagInput, setTagInput] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     setForm(initial
-      ? { ...EMPTY, ...initial.decrypted, folderId: initial.folderId ?? null }
+      ? { ...EMPTY, ...initial.decrypted, tags: initial.decrypted?.tags ?? [], folderId: initial.folderId ?? null }
       : EMPTY
     );
+    setTagInput('');
     setHistoryOpen(false);
     setHistory([]);
   }, [initial, isOpen]);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const commitTag = () => {
+    const tag = tagInput.trim().replace(/,+$/, '');
+    if (tag && !form.tags.includes(tag)) {
+      setForm((f) => ({ ...f, tags: [...f.tags, tag] }));
+    }
+    setTagInput('');
+  };
+
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commitTag(); }
+    if (e.key === 'Backspace' && !tagInput && form.tags.length > 0) {
+      setForm((f) => ({ ...f, tags: f.tags.slice(0, -1) }));
+    }
+  };
+
+  const removeTag = (tag) => setForm((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }));
 
   const toggleHistory = async () => {
     if (historyOpen) { setHistoryOpen(false); return; }
@@ -143,6 +162,27 @@ export function VaultItemModal({ isOpen, onClose, onSave, initial = null }) {
             onChange={set('notes')}
             rows={3}
           />
+        </div>
+
+        <div className="form-group">
+          <label>Tags</label>
+          <div className="vim-tags-input">
+            {form.tags.map((tag) => (
+              <span key={tag} className="vim-tag-chip">
+                {tag}
+                <button type="button" className="vim-tag-remove" onClick={() => removeTag(tag)}>×</button>
+              </span>
+            ))}
+            <input
+              className="vim-tag-field"
+              type="text"
+              placeholder={form.tags.length === 0 ? 'Añade tags…' : ''}
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagKeyDown}
+              onBlur={commitTag}
+            />
+          </div>
         </div>
 
         {initial?.id && (

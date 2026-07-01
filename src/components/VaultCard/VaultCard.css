@@ -95,3 +95,26 @@
 .vault-card-delete:hover box-icon {
   color: var(--color-error);
 }
+
+.vault-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+}
+
+.vault-card-tag {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.45rem;
+  font-size: 0.73rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.vault-card-tag:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
