@@ -41,7 +41,7 @@ export function Login() {
     );
 
     login(response.accessToken, response.refreshToken, email);
-    setVaultKey(vaultKey);
+    setVaultKey(vaultKey, response.vaultTimeoutMinutes);
     navigate(URLS.VAULT);
   };
 

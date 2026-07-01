@@ -120,6 +120,18 @@ export const unprotectVaultKey = async (protectedSymmetricKey, protectedSymmetri
   );
 };
 
+/** Exporta una vault key CryptoKey a Base64 para persistirla en sessionStorage. */
+export const exportVaultKey = async (vaultKey) => {
+  const raw = await crypto.subtle.exportKey('raw', vaultKey);
+  return toBase64(new Uint8Array(raw));
+};
+
+/** Importa una vault key desde Base64 (leída de sessionStorage) como CryptoKey lista para usar. */
+export const importVaultKey = async (base64) => {
+  const raw = fromBase64(base64);
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+};
+
 // ─── Recovery ────────────────────────────────────────────────────────────────
 
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
