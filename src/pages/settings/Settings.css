@@ -132,9 +132,41 @@
   transition: opacity 0.2s;
 }
 
-.settings-btn--primary { background: var(--color-accent); color: var(--color-bg); }
-.settings-btn--danger  { background: rgba(224,92,92,0.15); color: var(--color-error); border: 1px solid rgba(224,92,92,0.3); }
-.settings-btn:hover { opacity: 0.85; }
+.settings-btn--primary   { background: var(--color-accent); color: var(--color-bg); }
+.settings-btn--secondary { background: var(--color-surface-high); color: var(--color-text); border: 1px solid var(--color-border); }
+.settings-btn--danger    { background: rgba(224,92,92,0.15); color: var(--color-error); border: 1px solid rgba(224,92,92,0.3); }
+.settings-btn:hover:not(:disabled) { opacity: 0.85; }
+.settings-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Export / Import */
+.settings-data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.settings-data-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.settings-data-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-import-result {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.settings-import-result--ok   { color: var(--color-accent);  background: rgba(142,182,155,0.12); }
+.settings-import-result--warn { color: #e0b44a; background: rgba(224,180,74,0.1); }
 
 /* TOTP setup modal */
 .totp-setup { display: flex; flex-direction: column; gap: 0.75rem; }

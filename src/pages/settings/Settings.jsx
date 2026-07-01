@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AuthService from '../../service/domains/AuthService.jsx';
+import VaultService from '../../service/domains/VaultService.jsx';
 import useCommonService from '../../service/CommonService.jsx';
 import { tokenStore } from '../../service/tokenStore.js';
+import { encryptVaultItem, decryptVaultItem } from '../../crypto/vault.js';
 import { Toast } from '../../components/Toast/Toast.jsx';
 import { Modal } from '../../components/Modal/Modal.jsx';
 import {
@@ -14,7 +16,8 @@ import 'boxicons';
 import './Settings.css';
 
 export function Settings() {
-  const authService = AuthService();
+  const authService  = AuthService();
+  const vaultService = VaultService();
   const { vaultKey, decodeJWT } = useCommonService();
 
   const [sessions, setSessions] = useState([]);
@@ -43,6 +46,11 @@ export function Settings() {
   const [disableModal, setDisableModal]   = useState(false);
   const [disableTotp, setDisableTotp]     = useState('');
   const [disableSaving, setDisableSaving] = useState(false);
+
+  // Export / Import state
+  const importInputRef                      = useRef(null);
+  const [importing, setImporting]           = useState(false);
+  const [importResult, setImportResult]     = useState(null); // { imported, errors } | null
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -197,6 +205,110 @@ export function Settings() {
     }
   };
 
+  // ── Export / Import helpers ──────────────────────────────────────────────
+
+  const csvEscape = (v) => {
+    const s = v == null ? '' : String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const parseCsvLine = (line) => {
+    const result = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+      else cur += c;
+    }
+    result.push(cur);
+    return result;
+  };
+
+  const parseBitwardenCsv = (text) => {
+    const lines = text.split('\n').filter((l) => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const idx = (n) => headers.indexOf(n);
+    return lines.slice(1).map((l) => {
+      const c = parseCsvLine(l);
+      return { name: c[idx('name')] || '', url: c[idx('login_uri')] || '', username: c[idx('login_username')] || '', password: c[idx('login_password')] || '', notes: idx('notes') >= 0 ? c[idx('notes')] || '' : '', tags: [] };
+    }).filter((item) => item.name);
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const datestamp = () => new Date().toISOString().slice(0, 10);
+
+  const handleExportIronkey = async () => {
+    if (!vaultKey) { showToast('Sesión expirada — vuelve a iniciar sesión', 'error'); return; }
+    try {
+      const raw = await vaultService.listItems();
+      const items = await Promise.all(raw.map(async (item) => {
+        const data = await decryptVaultItem(vaultKey, item.encryptedData, item.iv);
+        return { ...data, folderId: item.folderId ?? null };
+      }));
+      const { encryptedData, iv } = await encryptVaultItem(vaultKey, { version: 1, items, exportedAt: new Date().toISOString() });
+      const blob = new Blob([JSON.stringify({ version: 1, encryptedData, iv })], { type: 'application/json' });
+      downloadBlob(blob, `ironkey-backup-${datestamp()}.ironkey`);
+      showToast('Bóveda exportada correctamente', 'success');
+    } catch { showToast('Error al exportar la bóveda', 'error'); }
+  };
+
+  const handleExportCsv = async () => {
+    if (!vaultKey) { showToast('Sesión expirada — vuelve a iniciar sesión', 'error'); return; }
+    try {
+      const raw = await vaultService.listItems();
+      const rows = await Promise.all(raw.map(async (item) => {
+        const d = await decryptVaultItem(vaultKey, item.encryptedData, item.iv);
+        return ['', '', 'login', csvEscape(d.name), csvEscape(d.notes), '', '0', csvEscape(d.url), csvEscape(d.username), csvEscape(d.password), ''].join(',');
+      }));
+      const csv = ['folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp', ...rows].join('\n');
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `ironkey-export-${datestamp()}.csv`);
+      showToast('Exportado como CSV (Bitwarden)', 'success');
+    } catch { showToast('Error al exportar', 'error'); }
+  };
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !vaultKey) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const text = await file.text();
+      const ext  = file.name.split('.').pop().toLowerCase();
+      let items  = [];
+
+      if (ext === 'ironkey') {
+        const { encryptedData, iv } = JSON.parse(text);
+        const payload = await decryptVaultItem(vaultKey, encryptedData, iv);
+        items = payload.items ?? [];
+      } else if (ext === 'csv') {
+        items = parseBitwardenCsv(text);
+      } else {
+        showToast('Formato no soportado — usa .ironkey o .csv (Bitwarden)', 'error');
+        return;
+      }
+
+      let imported = 0, errors = 0;
+      for (const item of items) {
+        try {
+          const { folderId, ...data } = item;
+          const encrypted = await encryptVaultItem(vaultKey, data);
+          await vaultService.createItem({ ...encrypted, folderId: folderId ?? null });
+          imported++;
+        } catch { errors++; }
+      }
+      setImportResult({ imported, errors });
+    } catch { showToast('Error al leer el archivo', 'error'); }
+    finally { setImporting(false); e.target.value = ''; }
+  };
+
   return (
     <div className="settings-page">
       <div className="settings-content">
@@ -277,6 +389,54 @@ export function Settings() {
                 Desactivar recuperación
               </button>
             )}
+          </div>
+        </section>
+        {/* Exportar / Importar */}
+        <section className="settings-section">
+          <h2>Exportar / Importar bóveda</h2>
+          <p className="settings-desc">
+            Exporta tus credenciales como archivo cifrado (.ironkey) o en formato CSV compatible con Bitwarden.
+            Importa desde cualquiera de esos formatos.
+          </p>
+
+          <div className="settings-data-grid">
+            <div className="settings-data-card">
+              <p className="settings-data-label">Exportar</p>
+              <div className="settings-actions">
+                <button className="settings-btn settings-btn--primary" onClick={handleExportIronkey}>
+                  <box-icon name="lock" color="var(--color-bg)" size="15px" />
+                  .ironkey
+                </button>
+                <button className="settings-btn settings-btn--secondary" onClick={handleExportCsv}>
+                  <box-icon name="spreadsheet" color="var(--color-text)" size="15px" />
+                  CSV Bitwarden
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-data-card">
+              <p className="settings-data-label">Importar</p>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".ironkey,.csv"
+                style={{ display: 'none' }}
+                onChange={handleImportFile}
+              />
+              <button
+                className="settings-btn settings-btn--secondary"
+                onClick={() => { setImportResult(null); importInputRef.current?.click(); }}
+                disabled={importing}
+              >
+                <box-icon name="upload" color="var(--color-text)" size="15px" />
+                {importing ? 'Importando…' : 'Seleccionar archivo'}
+              </button>
+              {importResult && (
+                <p className={`settings-import-result ${importResult.errors > 0 ? 'settings-import-result--warn' : 'settings-import-result--ok'}`}>
+                  {importResult.imported} importadas{importResult.errors > 0 ? `, ${importResult.errors} con error` : ' correctamente'}
+                </p>
+              )}
+            </div>
           </div>
         </section>
       </div>
