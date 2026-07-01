@@ -13,26 +13,28 @@ import './Unlock.css';
 
 // step: 'password' | 'totp' | 'loading'
 export function Unlock() {
-  const navigate   = useNavigate();
+  const navigate    = useNavigate();
   const authService = AuthService();
-  const { isAuthenticated, login, setVaultKey } = useCommonService();
+  const { isAuthenticated, login, setVaultKey, vaultKey } = useCommonService();
 
-  const storedEmail  = tokenStore.getEmail();
-  const hasRefresh   = !!tokenStore.getRefresh();
-
-  // Si ya está autenticado, ir directo al vault
-  if (isAuthenticated()) return <Navigate to={URLS.VAULT} replace />;
-
-  // Si no hay sesión guardada, ir al login normal
-  if (!storedEmail || !hasRefresh) return <Navigate to={URLS.LOGIN} replace />;
-
+  // Hooks siempre antes de cualquier return condicional
   const [step, setStep]         = useState('password');
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const [error, setError]       = useState('');
-
   const [cachedEncKey, setCachedEncKey] = useState(null);
   const [cachedHash,   setCachedHash]   = useState(null);
+
+  const storedEmail = tokenStore.getEmail();
+  const hasRefresh  = !!tokenStore.getRefresh();
+
+  // Solo redirigir al vault si hay access token Y vault key activa.
+  // Si solo hay access token (vault key expirada), mostrar el formulario de unlock.
+  if (isAuthenticated() && vaultKey) return <Navigate to={URLS.VAULT} replace />;
+
+  // Sin sesión guardada → login completo
+  if (!storedEmail || !hasRefresh) return <Navigate to={URLS.LOGIN} replace />;
+
 
   const doLogin = async (encryptionKey, masterPasswordHash, totpCodeValue) => {
     const response = await authService.login({
