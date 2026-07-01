@@ -184,7 +184,7 @@ describe('newPassword step', () => {
     expect(screen.getByText(/las contraseñas no coinciden/i)).toBeInTheDocument();
   });
 
-  it('shows an error if new password is shorter than 8 characters', async () => {
+  it('shows an error if new password is shorter than 12 characters', async () => {
     await setupNewPasswordStep();
 
     const newPass     = screen.getByPlaceholderText(/mínimo/i);
@@ -193,7 +193,7 @@ describe('newPassword step', () => {
     fireEvent.change(confirmPass, { target: { value: 'abc' } });
     fireEvent.click(screen.getByRole('button', { name: /actualizar contraseña/i }));
 
-    expect(screen.getByText(/al menos 8 caracteres/i)).toBeInTheDocument();
+    expect(screen.getByText(/al menos 12 caracteres/i)).toBeInTheDocument();
   });
 
   it('shows done step after successful password update', async () => {

@@ -59,8 +59,8 @@ export function Recovery() {
       setError('Las contraseñas no coinciden');
       return;
     }
-    if (newPassword.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres');
+    if (newPassword.length < 12) {
+      setError('La contraseña debe tener al menos 12 caracteres');
       return;
     }
     setError('');

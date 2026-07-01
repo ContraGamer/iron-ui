@@ -275,3 +275,33 @@
   background: rgba(224, 92, 92, 0.1);
   color: var(--color-error);
 }
+
+.sidebar-health {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  overflow: hidden;
+}
+
+.sidebar-health-dot {
+  width: 7px;
+  height: 7px;
+  min-width: 7px;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+
+.sidebar-health-dot--up {
+  background: #4caf7d;
+}
+
+.sidebar-health-dot--down {
+  background: var(--color-error);
+}
+
+.sidebar-health-label {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}

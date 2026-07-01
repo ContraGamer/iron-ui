@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { URLS } from '../../const/URLs.jsx';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle.jsx';
@@ -6,6 +6,7 @@ import useCommonService from '../../service/CommonService.jsx';
 import AuthService from '../../service/domains/AuthService.jsx';
 import { useSidebar } from '../../context/SidebarProvider.jsx';
 import { useFolders } from '../../context/FolderProvider.jsx';
+import HealthService from '../../service/domains/HealthService.jsx';
 import 'boxicons';
 import './Sidebar.css';
 
@@ -28,6 +29,17 @@ export function Sidebar() {
   const authService = AuthService();
   const { setSidebarExpanded } = useSidebar();
   const { folders, selectedFolderId, setSelectedFolderId, createFolder, renameFolder, removeFolder } = useFolders();
+  const healthService = HealthService();
+  const [serverUp, setServerUp] = useState(null); // null = checking, true = up, false = down
+
+  useEffect(() => {
+    const check = () => healthService.getStatus()
+      .then(() => setServerUp(true))
+      .catch(() => setServerUp(false));
+    check();
+    const id = setInterval(check, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const toggle = () => {
     const next = !expanded;
@@ -209,6 +221,17 @@ export function Sidebar() {
           <box-icon name="log-out" color="var(--color-muted)" size="20px" />
           {expanded && <span>Salir</span>}
         </button>
+        <div
+          className="sidebar-health"
+          title={serverUp === null ? 'Verificando…' : serverUp ? 'Servidor activo' : 'Servidor no disponible'}
+        >
+          <span className={`sidebar-health-dot ${serverUp === null ? '' : serverUp ? 'sidebar-health-dot--up' : 'sidebar-health-dot--down'}`} />
+          {expanded && (
+            <span className="sidebar-health-label">
+              {serverUp === null ? 'Verificando…' : serverUp ? 'Servidor activo' : 'Sin conexión'}
+            </span>
+          )}
+        </div>
       </div>
     </aside>
   );
