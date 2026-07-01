@@ -31,6 +31,9 @@ const VaultService = () => {
   const purgeItem = (id) =>
     deleteApi(APIs.VAULT.PURGE(id));
 
+  const getItemHistory = (id) =>
+    getApi(APIs.VAULT.HISTORY(id));
+
   return {
     listItems,
     createItem,
@@ -41,6 +44,7 @@ const VaultService = () => {
     purgeTrash,
     restoreItem,
     purgeItem,
+    getItemHistory,
   };
 };
 

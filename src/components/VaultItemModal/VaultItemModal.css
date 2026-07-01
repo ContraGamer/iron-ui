@@ -61,3 +61,91 @@
   margin-top: 0;
   font-size: 0.9rem;
 }
+
+/* History */
+.vim-history {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.vim-history-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.6rem 0.75rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.vim-history-toggle span {
+  flex: 1;
+}
+
+.vim-history-toggle:hover {
+  background: var(--color-surface-high);
+}
+
+.vim-history-list {
+  border-top: 1px solid var(--color-border);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.vim-history-empty {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  text-align: center;
+  padding: 0.5rem 0;
+  margin: 0;
+}
+
+.vim-history-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-high);
+}
+
+.vim-history-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.vim-history-date {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.vim-history-password {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.vim-history-pass-text {
+  font-size: 0.82rem;
+  color: var(--color-text);
+  letter-spacing: 0.05em;
+}
+
+.vim-history-error {
+  color: var(--color-error);
+}

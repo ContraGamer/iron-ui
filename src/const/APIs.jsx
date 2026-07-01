@@ -25,6 +25,7 @@ export const APIs = {
     PURGE_TRASH: 'api/v1/vault/trash',
     RESTORE:     (id) => `api/v1/vault/${id}/restore`,
     PURGE:       (id) => `api/v1/vault/${id}/purge`,
+    HISTORY:     (id) => `api/v1/vault/${id}/history`,
   },
   FOLDERS: {
     LIST:   'api/v1/folders',
